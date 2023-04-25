@@ -1,12 +1,12 @@
 kind: Service
 apiVersion: v1
 metadata:
-  name: nodeapp
+  name: react-app-svc
 spec:
   selector:
-    app: nodeapp
+    app: react-app
   ports:
   - protocol: TCP
     port: 80
-    targetPort: 8080
+    targetPort: 9909
   type: LoadBalancer  
