@@ -83,7 +83,7 @@ stages:
             displayName: 'Deploy to production AWS EKS'
             inputs:
               connectionType: 'Kubernetes Service Connection'
-              kubernetesServiceEndpoint: 'minikube-ubuntu-conn'
+              kubernetesServiceEndpoint: 'eks-conn'
               namespace: $(k8sNameSpace)
               command: 'apply'
               useConfigurationFile: true
