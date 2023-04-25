@@ -1,4 +1,4 @@
-# Simple React
+# Simple React App
 
 Sample React.js application for the Docker environment.
 
