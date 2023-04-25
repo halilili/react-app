@@ -70,7 +70,7 @@ stages:
         displayName: Deploy to Kubernetes
         steps:
           - task: KubernetesManifest@0
-            displayName: 'Deploy to AWS EKS'
+            displayName: 'Deploy to a Dev environment onprime minikube'
             inputs:
               kubernetesServiceConnection: 'minikube-ubuntu-conn'
               action: 'deploy'
@@ -80,7 +80,7 @@ stages:
                 $(dockerhubNS)/$(imageName):$(imageTag)
                
           - task: Kubernetes@1
-            displayName: 'Deploy to onprime minikube'
+            displayName: 'Deploy to production AWS EKS'
             inputs:
               connectionType: 'Kubernetes Service Connection'
               kubernetesServiceEndpoint: 'minikube-ubuntu-conn'
