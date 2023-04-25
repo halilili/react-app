@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nodeapp-deployment
+  name: react-app-deployment
 spec:
   replicas: 3
   strategy:
@@ -11,14 +11,14 @@ spec:
       maxUnavailable: 25%
   selector:
     matchLabels:
-      app: nodeapp
+      app: react-app
   template:
     metadata:
       labels:
-        app: nodeapp
+        app: react-app
     spec:
       containers:
-      - image: hassanali70826/hellowebapp:imageTag
-        name: nodeapp
+      - image: hassanali70826/react-app:imageTag
+        name: react-app
         ports:
-        - containerPort: 5175
+        - containerPort: 9909
