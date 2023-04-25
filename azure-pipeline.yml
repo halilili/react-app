@@ -22,7 +22,7 @@ variables:
   k8sClusterName: 'minikube'
   k8sNameSpace: 'dev-deployments'
   dockerhubNS: 'hassanali70826'
-  deploymentFile: '**/k8s/deployment.yaml'
+  deploymentFile: '**/k8s/deployment.yml'
 
 stages:
   - stage: Build
