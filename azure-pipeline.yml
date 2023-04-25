@@ -1,0 +1,128 @@
+# Azure DevOps pipeline YAML file for building and deploying a Docker image to a Kubernetes cluster on-premises
+
+# Define the pipeline
+trigger:
+- none
+  #branches:
+    #include:
+      #- main
+  #paths:
+    #nclude:
+      #- Dockerfile
+      #- app/**/*
+
+pool:
+  vmImage: 'ubuntu-20.04'
+
+variables:
+  imageName: 'hellowebapp'
+  imageTag: '$(Build.BuildId)'
+  imageFullName: '$(imageName):$(imageTag)'
+  dockerfile: '**/Dockerfile'
+  k8sClusterName: 'minikube'
+  k8sNameSpace: 'dev-deployments'
+  dockerhubNS: 'hassanali70826'
+  deploymentFile: '**/k8s/deployment.yaml'
+
+stages:
+  - stage: Build
+    displayName: Build and Push Image
+    jobs:
+      - job: Build
+        displayName: Build and Push
+        steps:
+        
+          - task: Docker@2
+            name: 'DockerLogIn'
+            displayName: 'LogIn to Docker'
+            inputs:
+              containerRegistry: 'docker-hub-connection'
+              command: 'login'
+
+          - task: Docker@2
+            displayName: Build and Push Docker Image
+            inputs:
+              command: buildAndPush
+              containerRegistry: 'docker-hub-connection'
+              repository: $(dockerhubNS)/$(imageName)
+              dockerfile: $(dockerfile) #$(Build.SourcesDirectory)/
+              tags: |
+                $(imageTag)
+              #buildContext: '$(Build.SourcesDirectory)'
+          
+      - job: Dispaly
+        displayName: 'Command Line Script to write out some vars' 
+        steps:
+        - script: |
+            echo build.artifactstagingdirectory and build.BuildId are as follows.
+            echo $(build.artifactstagingdirectory) $(build.BuildId)
+            echo Pipeline.Workspace is $(Pipeline.Workspace)
+            echo The current branch is - $(Build.SourceBranchName)!!.
+            echo $(finalBuildArtifactName)
+ 
+
+  - stage: Deploy
+    displayName: Deploy to Kubernetes
+    dependsOn: Build
+    condition: succeeded()
+    jobs:
+      - job: Deploy
+        displayName: Deploy to Kubernetes
+        steps:
+          - task: KubernetesManifest@0
+            displayName: 'Deploy to AWS EKS'
+            inputs:
+              kubernetesServiceConnection: 'minikube-ubuntu-conn'
+              action: 'deploy'
+              namespace: $(k8sNameSpace)
+              manifests: $(deploymentFile)
+              containers: |
+                $(dockerhubNS)/$(imageName):$(imageTag)
+               
+          - task: Kubernetes@1
+            displayName: 'Deploy to onprime minikube'
+            inputs:
+              connectionType: 'Kubernetes Service Connection'
+              kubernetesServiceEndpoint: 'minikube-ubuntu-conn'
+              namespace: $(k8sNameSpace)
+              command: 'apply'
+              useConfigurationFile: true
+              configuration: $(System.ArtifactDirectory)/$(deploymentFile) #$(Pipeline.Workspace)/
+              secretType: 'dockerRegistry'
+              containerRegistryType: 'Container Registry'
+              dockerRegistryEndpoint: 'docker-hub-connection'
+              arguments: |
+               --imageTag $(imageTag)
+              
+
+          
+
+
+
+#use Azure Resource Manager
+          #- task: Kubernetes@1
+            #displayName: 'Deploy to Kubernetes cluster'
+            #inputs:
+              #connectionType: 'Azure Resource Manager'
+              #azureSubscriptionEndpoint: 'MyServiceConnection'
+              #azureResourceGroup: 'my-rg'
+              #kubernetesCluster: $(k8sClusterName)
+              #command: 'apply'
+              #arguments: |
+                #-f k8s/deployment.yaml
+                #--namespace $(k8sNamespace)
+                #--record
+                #--wait
+
+
+#use Kubernetes Manifest
+          #- task: KubernetesManifest@0
+            #displayName: Apply Kubernetes manifests
+            #inputs:
+              #action: 'apply'
+              #kubernetesServiceConnection: 'minikube-ubuntu-conn'
+              #namespace: $(k8sClusterName)
+              #manifests: |
+                #$(Pipeline.Workspace)/kubernetes/
+  
+  
